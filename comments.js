@@ -1,27 +1,31 @@
 //create web server
 var express = require('express');
 var app = express();
-var path = require('path');
+//parse request body
 var bodyParser = require('body-parser');
-var fs = require('fs');
-var comments = [];
-var port = process.env.PORT || 3000;
-
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+//create database
+var Datastore = require('nedb');
+var db = new Datastore({ filename: 'comments.db', autoload: true });
+//serve static files
 app.use(express.static('public'));
 
-app.get('/comments', function(req, res) {
-    res.json(comments);
+//get all comments
+app.get('/comments', function (req, res) {
+    db.find({}, function (err, docs) {
+        res.json(docs);
+    });
 });
 
-app.post('/comments', function(req, res) {
-    var comment = req.body;
-    comments.push(comment);
-    res.json(comment);
+//add a comment
+app.post('/comments', function (req, res) {
+    var newComment = req.body;
+    db.insert(newComment, function (err, doc) {
+        res.json(doc);
+    });
 });
 
-app.listen(port, function() {
-    console.log('Server started on http://localhost:' + port);
+//start server
+app.listen(3000, function () {
+    console.log('Server listening on port 3000');
 });
