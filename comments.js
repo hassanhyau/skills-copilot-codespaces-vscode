@@ -1,66 +1,27 @@
-// create web server
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const fs = require('fs');
+//create web server
+var express = require('express');
+var app = express();
+var path = require('path');
+var bodyParser = require('body-parser');
+var fs = require('fs');
+var comments = [];
+var port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// create a comment
-app.post('/comments', (req, res) => {
-  const newComment = req.body;
-  const comments = getComments();
-  comments.push(newComment);
-  saveComments(comments);
-  res.send('Comment added');
+app.use(express.static('public'));
+
+app.get('/comments', function(req, res) {
+    res.json(comments);
 });
 
-// get all comments
-app.get('/comments', (req, res) => {
-  const comments = getComments();
-  res.json(comments);
+app.post('/comments', function(req, res) {
+    var comment = req.body;
+    comments.push(comment);
+    res.json(comment);
 });
 
-// get a comment by id
-app.get('/comments/:id', (req, res) => {
-  const id = req.params.id;
-  const comments = getComments();
-  const comment = comments.find(comment => comment.id === id);
-  res.json(comment);
-});
-
-// update a comment by id
-app.put('/comments/:id', (req, res) => {
-  const id = req.params.id;
-  const updatedComment = req.body;
-  const comments = getComments();
-  const index = comments.findIndex(comment => comment.id === id);
-  comments[index] = updatedComment;
-  saveComments(comments);
-  res.send('Comment updated');
-});
-
-// delete a comment by id
-app.delete('/comments/:id', (req, res) => {
-  const id = req.params.id;
-  const comments = getComments();
-  const index = comments.findIndex(comment => comment.id === id);
-  comments.splice(index, 1);
-  saveComments(comments);
-  res.send('Comment deleted');
-});
-
-// helper functions
-const getComments = () => {
-  const comments = fs.readFileSync('comments.json');
-  return JSON.parse(comments);
-};
-
-const saveComments = (comments) => {
-  fs.writeFileSync('comments.json', JSON.stringify(comments));
-};
-
-// start server
-app.listen(3000, () => {
-  console.log('Server started');
+app.listen(port, function() {
+    console.log('Server started on http://localhost:' + port);
 });
